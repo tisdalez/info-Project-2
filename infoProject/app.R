@@ -22,8 +22,11 @@ crime <- read_delim("crimeDataEnding3-6-2023.csv")
 crime1 <- crime %>% 
   mutate(datech = substr(`Offense Start DateTime`,1,10)) %>% 
   mutate(date = as.Date(datech, format = "%m/%d/%Y")) %>% 
-  filter(as.numeric(format(date,'%Y'))>2008) 
+  filter(as.numeric(format(date,'%Y'))>=2008) 
 
+crime2 <- crime %>% 
+  mutate(dateDirty = gsub("(.)\\.?[Mm]\\.?","\\1m",crime$`Offense Start DateTime`)) %>% 
+  mutate(date = as.POSIXct(dateDirty, format="%d/%m/%Y %I:%M:%S %p", tz="PST8PDT")) 
 
 maxRows <- crime1 %>% 
   na.omit() %>% 
@@ -34,30 +37,25 @@ ui <- fluidPage(
     titlePanel("Seattle Police Crime Data"),
     tabsetPanel(
       tabPanel("About the data",
-               h1("What is this data?"),
-               p("This data is a collection of crime data from the ", strong("Seattle 
-                 Police Department"), ", the data spans from 2008 and is still updated
-                 to this day, although I retrieved the data on ", 
-                 strong("February 15th"),", so it doesn't have any data after 
-                 that point"),
-               em("I am not sure about how recent the data needs to be."),
-               h1("What does this application do?"),
-               p("The plot plots a sample from 1000 to ", nrow(crime), " reports, or all
-               of the reports in the dataset. The plot charts how
-               many of the reports there are from each year, letting you
-               get a good of the distribution. without having to look at all the
-               data if you prefer."),
-               p(("There are "), nrow(crime), " rows of data and ", ncol(crime),
-                 "collumns of data. IN the dataset, the ranking of who the the crime
-               was against is as follows,
-               PROPERTY,
-               PERSON,
-               SOCIETY,
-               NOT_A_CRIME",
-                 "I wasn't able to calculate this data on this document but a the 
-               project information document that will be in the github file")),
+               img(alt="image of crime", 
+                   src="crimeSceneImage.jpg", align = "right"),
+               
+               h1("About the project"),
+               p("Crime poses a serious threat to our safety. 
+                 Since crime is always lurking around us, it is very important to be aware of what is going on around us. 
+                 Our aim with this project is to provide information to the public about a crime that threatens us. 
+                 We believe that having access to this information will help people make better decisions and protect themselves from potential harm. 
+                 We want to empower people with the knowledge of how to stay safe and secure in their own communities. 
+                 We hope that this project will help make our world a safer place."),
+               h1("About the data"),
+               p("The data we are using for this project is from", a("Seattle open data portal.", href = 'https://data.seattle.gov/Public-Safety/SPD-Crime-Data-2008-Present/tazs-3rd5'), 
+                 "It’s directly from the Seattle Police Department and it’s updated daily."),
+               h1("Our group members"),
+               p("Marcus Christopher Liu, Zack Tisdale, Ray Hwang")
+      ),
       
-      tabPanel("Plot",sidebarPanel(
+      
+      tabPanel("Reports by Year",sidebarPanel(
         sliderInput("n", "How many reports of crime:",
                     min = 1000,
                     max = maxRows,
@@ -76,13 +74,25 @@ ui <- fluidPage(
                    checkboxGroupInput("show_vars", "Columns in the Crime Data to show:",
                                       names(crime), selected = names(crime))
                  ),mainPanel(DT::dataTableOutput("table"),textOutput("textSummary2")))),
-      tabPanel("Test", sidebarLayout(sidebarPanel(
+      
+      tabPanel("Reports by Month", sidebarLayout(sidebarPanel(
         radioButtons("color2", "Choose color",
                      choices = c("skyblue", "lawngreen", "orangered",
                                           "purple", "gold")),
                                           uiOutput("againstCategory2")
       ),
-                                     mainPanel(plotOutput("plot2"))))
+                                     mainPanel(plotOutput("plot2")))),
+      
+      tabPanel("Reports by time of day", sidebarLayout(sidebarPanel(
+        radioButtons("color3", "Choose color",
+                     choices = c("skyblue", "lawngreen", "orangered",
+                                          "purple", "gold")),
+                                          uiOutput("againstCategory3"),
+        sliderInput("range", "Year Range:",
+                    min = 2008, max = 2023,
+                    value = c(2020,2021)),
+      ),
+      mainPanel(plotOutput("plot3"))))
     )
   )
 )
@@ -102,6 +112,12 @@ server <- function(input, output) {
     )
   })
   
+  output$againstCategory3 <- renderUI({
+    checkboxGroupInput("against3", "Who the crime was againt",
+                       choices = unique(crime$`Crime Against Category`)
+    )
+  })
+  
   
   output$plot <- renderPlot({
     crime2 <- crime1 %>% 
@@ -113,7 +129,7 @@ server <- function(input, output) {
       summarize(n = n_distinct(`Offense ID`)) 
     ggplot(crime2) +
       geom_line(aes(x =`as.numeric(format(date, "%Y"))`,y = n),col=input$color)+
-      ggtitle("Amount of Crime reports per year from the sample")+
+      ggtitle("Amount of Crime Reports per year from the sample")+
       xlab("Year") +
       ylab("Number of Reports that year")
   })
@@ -128,11 +144,26 @@ server <- function(input, output) {
       summarize(n = n_distinct(`Offense ID`)) 
     ggplot(crime2) +
       geom_line(aes(x =`as.numeric(format(date, "%m"))`,y = n),col=input$color2)+
-      ggtitle("Amount of Crime reports per Month from the sample")+
+      ggtitle("Amount of Crime Reports per Month")+
       xlab("Month") +
       ylab("Number of Reports that month")
   })
   
+  output$plot3 <- renderPlot({
+    crime3 <- crime2 %>% 
+      select(date,`Crime Against Category`,`Offense ID`) %>% 
+      filter(`Crime Against Category` %in% input$against3) %>% 
+      select(date,`Offense ID`) %>%
+      filter(as.numeric(format(date, "%Y")) >= input$range[1] & as.numeric(format(date, "%Y")) <= input$range[2]) %>% 
+      group_by(as.numeric(format(date,'%H'))) %>% 
+      na.omit() %>% 
+      summarize(n = n_distinct(`Offense ID`)) 
+    ggplot(crime3) +
+      geom_line(aes(x =`as.numeric(format(date, "%H"))`,y = n),col=input$color3)+
+      ggtitle("Amount of Crime Reports per Hour")+
+      xlab("Hour of the Day") +
+      ylab("Number of Reports per hour")
+  })
   
   
   output$table <- DT::renderDataTable({
