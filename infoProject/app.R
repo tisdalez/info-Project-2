@@ -7,6 +7,10 @@
 #    http://shiny.rstudio.com/
 #C:/Users/AquaP/OneDrive/Desktop/Info201/ps06-shiny-app/ps06-shiny-app/app.R
 
+
+
+# Seattle Police Crime Data Info Project
+
 # shiny app
 
 library(shiny)
@@ -14,6 +18,16 @@ library(shiny)
 library(tidyverse)
 
 crime <- read_delim("crimeDataEnding3-6-2023.csv")
+
+crime1 <- crime %>% 
+  mutate(datech = substr(`Offense Start DateTime`,1,10)) %>% 
+  mutate(date = as.Date(datech, format = "%m/%d/%Y")) %>% 
+  filter(as.numeric(format(date,'%Y'))>2008) 
+
+
+maxRows <- crime1 %>% 
+  na.omit() %>% 
+  nrow()
 
 ui <- fluidPage(
   mainPanel(
@@ -46,7 +60,7 @@ ui <- fluidPage(
       tabPanel("Plot",sidebarPanel(
         sliderInput("n", "How many reports of crime:",
                     min = 1000,
-                    max = nrow(crime),
+                    max = maxRows,
                     value = 10000),
         radioButtons("color", "Choose color",
                      choices = c("skyblue", "lawngreen", "orangered",
@@ -61,7 +75,14 @@ ui <- fluidPage(
                  sidebarPanel(
                    checkboxGroupInput("show_vars", "Columns in the Crime Data to show:",
                                       names(crime), selected = names(crime))
-                 ),mainPanel(DT::dataTableOutput("table"),textOutput("textSummary2"))))
+                 ),mainPanel(DT::dataTableOutput("table"),textOutput("textSummary2")))),
+      tabPanel("Test", sidebarLayout(sidebarPanel(
+        radioButtons("color2", "Choose color",
+                     choices = c("skyblue", "lawngreen", "orangered",
+                                          "purple", "gold")),
+                                          uiOutput("againstCategory2")
+      ),
+                                     mainPanel(plotOutput("plot2"))))
     )
   )
 )
@@ -75,24 +96,43 @@ server <- function(input, output) {
     )
   })
   
+  output$againstCategory2 <- renderUI({
+    checkboxGroupInput("against2", "Who the crime was againt",
+                       choices = unique(crime$`Crime Against Category`)
+    )
+  })
+  
   
   output$plot <- renderPlot({
-    crime1 <- crime %>% 
+    crime2 <- crime1 %>% 
       sample_n(input$n) %>% 
-      mutate(datech = substr(`Offense Start DateTime`,1,10)) %>% 
-      mutate(date = as.Date(datech, format = "%m/%d/%Y")) %>% 
-      filter(as.numeric(format(date,'%Y'))>2008) %>% 
       filter(`Crime Against Category` %in% input$against) %>% 
       select(date,`Offense ID`) %>%
       group_by(as.numeric(format(date,'%Y'))) %>% 
       na.omit() %>% 
       summarize(n = n_distinct(`Offense ID`)) 
-    ggplot(crime1) +
+    ggplot(crime2) +
       geom_line(aes(x =`as.numeric(format(date, "%Y"))`,y = n),col=input$color)+
       ggtitle("Amount of Crime reports per year from the sample")+
       xlab("Year") +
       ylab("Number of Reports that year")
   })
+  
+  output$plot2 <- renderPlot({
+    crime2 <- crime1 %>% 
+      select(date,`Crime Against Category`,`Offense ID`) %>% 
+      filter(`Crime Against Category` %in% input$against2) %>% 
+      select(date,`Offense ID`) %>%
+      group_by(as.numeric(format(date,'%m'))) %>% 
+      na.omit() %>% 
+      summarize(n = n_distinct(`Offense ID`)) 
+    ggplot(crime2) +
+      geom_line(aes(x =`as.numeric(format(date, "%m"))`,y = n),col=input$color2)+
+      ggtitle("Amount of Crime reports per Month from the sample")+
+      xlab("Month") +
+      ylab("Number of Reports that month")
+  })
+  
   
   
   output$table <- DT::renderDataTable({
