@@ -1,0 +1,13 @@
+name: infoProject
+title: infoProject
+username:
+account: tisdalez
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8516686
+bundleId: 6932583
+url: https://tisdalez.shinyapps.io/infoProject/
+when: 1678303349.11024
+lastSyncTime: 1678303349.11026
+asMultiple: FALSE
+asStatic: FALSE
