@@ -38,7 +38,7 @@ ui <- fluidPage(
     tabsetPanel(
       tabPanel("About the data",
                img(alt="image of crime", 
-                   src="www/crimeSceneImage.jpg"),
+                   src='crimeSceneImage.jpg'),
                
                h1("About the project"),
                p("Crime poses a serious threat to our safety. 
