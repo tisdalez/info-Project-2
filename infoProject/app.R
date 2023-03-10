@@ -81,7 +81,7 @@ ui <- fluidPage(
                                           "purple", "gold")),
                                           uiOutput("againstCategory2")
       ),
-                                     mainPanel(plotOutput("plot2")))),
+                                     mainPanel(plotOutput("plot2"),textOutput("textSummary3")))),
       
       tabPanel("Reports by time of day", sidebarLayout(sidebarPanel(
         radioButtons("color3", "Choose color",
@@ -92,7 +92,12 @@ ui <- fluidPage(
                     min = 2008, max = 2023,
                     value = c(2020,2021)),
       ),
-      mainPanel(plotOutput("plot3"))))
+      mainPanel(plotOutput("plot3"),textOutput("textSummary4")))),
+      
+      
+      tabPanel("Conclusion", 
+      mainPanel(p("Here are the conclusions that we have made:
+                  ")))
     )
   )
 )
@@ -138,12 +143,11 @@ server <- function(input, output) {
     crime2 <- crime1 %>% 
       select(date,`Crime Against Category`,`Offense ID`) %>% 
       filter(`Crime Against Category` %in% input$against2) %>% 
-      select(date,`Offense ID`) %>%
-      group_by(as.numeric(format(date,'%m'))) %>% 
+      group_by(as.numeric(format(date,'%m')),`Crime Against Category`) %>% 
       na.omit() %>% 
       summarize(n = n_distinct(`Offense ID`)) 
     ggplot(crime2) +
-      geom_line(aes(x =`as.numeric(format(date, "%m"))`,y = n),col=input$color2)+
+      geom_line(aes(x =`as.numeric(format(date, "%m"))`,y = n))+
       ggtitle("Amount of Crime Reports per Month")+
       xlab("Month") +
       ylab("Number of Reports that month")
@@ -173,13 +177,12 @@ server <- function(input, output) {
   output$textSummary1 <- renderText({
     paste("Currently you have selected ", as.character(input$n), " reports. In the reports that 
          and that is ", as.character(signif(input$n/nrow(crime) * 100),digits = 3),"% of the reports 
-            in the dataset, also the data above shows that there is almost no crime in 2023 as 
-            the year is not finished, thus there hasn't been enough data. The data above represents
-            the yearly crime rate if you were unaware, and it it displays the amount that was found
-            in that year in the selected sample. I made it so that changing the colors resets the 
-            graph, so you don't have to click the slider again if you want to changet the sample 
-            but not the sample amount." 
-    )
+            in the dataset, This dataset displays the amount of reports over the years. This is useful
+          in showing the user if crime truly has been on the rise for each type of crime. It also has
+          a function that lets the user decide how many reports will be in the sample for the crime,
+          so if their computer can't handle all of the reports, than they can just look at a sample
+           of the crime."
+          )
   })
   
   output$textSummary2 <- renderText({
@@ -189,10 +192,19 @@ server <- function(input, output) {
                          select(input$show_vars) %>% 
                          na.omit() %>% 
                          nrow()),
-          "The data in the table above was reduced from a previous amount because
-            it was too large. The difference between a report number and an offense
-            ID is that a report number contains the year, whereas an offense ID is
-            wholy unique to each report, so it is useful when searching ignoring year." 
+          " This table is helpful because it allows the user to look at individual 
+          crime reports to get a sense of what data in the set is made of.
+          he difference between a report number and an offense." 
+    )
+  })
+  
+  output$textSummary3 <- renderText({
+    paste("Text Summary 3" 
+    )
+  })
+  
+  output$textSummary4 <- renderText({
+    paste("Text Summary 4"
     )
   })
 }
