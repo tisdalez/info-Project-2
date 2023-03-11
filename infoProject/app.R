@@ -60,10 +60,7 @@ ui <- fluidPage(
                     min = 1000,
                     max = maxRows,
                     value = 10000),
-        radioButtons("color", "Choose color",
-                     choices = c("skyblue", "lawngreen", "orangered",
-                                          "purple", "gold")),
-                                          uiOutput("againstCategory")
+        uiOutput("againstCategory")
       ),
       mainPanel(plotOutput("plot"),
                 textOutput("textSummary1")),
@@ -76,17 +73,11 @@ ui <- fluidPage(
                  ),mainPanel(DT::dataTableOutput("table"),textOutput("textSummary2")))),
       
       tabPanel("Reports by Month", sidebarLayout(sidebarPanel(
-        radioButtons("color2", "Choose color",
-                     choices = c("skyblue", "lawngreen", "orangered",
-                                          "purple", "gold")),
                                           uiOutput("againstCategory2")
       ),
                                      mainPanel(plotOutput("plot2"),textOutput("textSummary3")))),
       
       tabPanel("Reports by time of day", sidebarLayout(sidebarPanel(
-        radioButtons("color3", "Choose color",
-                     choices = c("skyblue", "lawngreen", "orangered",
-                                          "purple", "gold")),
                                           uiOutput("againstCategory3"),
         sliderInput("range", "Year Range:",
                     min = 2008, max = 2023,
@@ -128,12 +119,12 @@ server <- function(input, output) {
     crime2 <- crime1 %>% 
       sample_n(input$n) %>% 
       filter(`Crime Against Category` %in% input$against) %>% 
-      select(date,`Offense ID`) %>%
-      group_by(as.numeric(format(date,'%Y'))) %>% 
+      select(date,`Offense ID`,`Crime Against Category`) %>%
+      group_by(as.numeric(format(date,'%Y')),`Crime Against Category`) %>% 
       na.omit() %>% 
       summarize(n = n_distinct(`Offense ID`)) 
     ggplot(crime2) +
-      geom_line(aes(x =`as.numeric(format(date, "%Y"))`,y = n),col=input$color)+
+      geom_line(aes(x =`as.numeric(format(date, "%Y"))`,y = n,col=`Crime Against Category`))+
       ggtitle("Amount of Crime Reports per year from the sample")+
       xlab("Year") +
       ylab("Number of Reports that year")
@@ -147,7 +138,7 @@ server <- function(input, output) {
       na.omit() %>% 
       summarize(n = n_distinct(`Offense ID`)) 
     ggplot(crime2) +
-      geom_line(aes(x =`as.numeric(format(date, "%m"))`,y = n))+
+      geom_line(aes(x =`as.numeric(format(date, "%m"))`,y = n, col= `Crime Against Category`))+
       ggtitle("Amount of Crime Reports per Month")+
       xlab("Month") +
       ylab("Number of Reports that month")
@@ -157,13 +148,12 @@ server <- function(input, output) {
     crime3 <- crime2 %>% 
       select(date,`Crime Against Category`,`Offense ID`) %>% 
       filter(`Crime Against Category` %in% input$against3) %>% 
-      select(date,`Offense ID`) %>%
       filter(as.numeric(format(date, "%Y")) >= input$range[1] & as.numeric(format(date, "%Y")) <= input$range[2]) %>% 
-      group_by(as.numeric(format(date,'%H'))) %>% 
+      group_by(as.numeric(format(date,'%H')),`Crime Against Category`) %>% 
       na.omit() %>% 
       summarize(n = n_distinct(`Offense ID`)) 
     ggplot(crime3) +
-      geom_line(aes(x =`as.numeric(format(date, "%H"))`,y = n),col=input$color3)+
+      geom_line(aes(x =`as.numeric(format(date, "%H"))`,y = n, col= `Crime Against Category`))+
       ggtitle("Amount of Crime Reports per Hour")+
       xlab("Hour of the Day") +
       ylab("Number of Reports per hour")
