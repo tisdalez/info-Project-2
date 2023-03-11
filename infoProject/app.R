@@ -87,11 +87,42 @@ ui <- fluidPage(
       
       
       tabPanel("Conclusion", 
-      mainPanel(p("Here are the conclusions that we have made:
+      mainPanel(p("From our project, we noted three significant findings relating
+      to the number of crime reports during the day, by the month, and throughout 
+      the years. We found that over the years, the number of crime reports has slightly 
+      increased from the years 2008-2022. Over the set of these years, there was an 
+      increase in 10,000 crime reports. When looking at the crime reports per month, 
+      we found that January and May were the months with the highest amounts of crime 
+      reports, with around 90,000 and 92,500 crime reports respectively. We also 
+      found that February had the lowest amount of crime reports out of all the 
+      months coming in at around 76,000. We also found that the time of the day 
+      with the most amount of crime is at around midnight, and the time of the 
+      day with the least amount of crime reports is around 5am. 
+      From these findings, we are able to be more informed of the times of the year, 
+      month, and day where crime reports increase, which allows us and our loved ones to be 
+      in the most safe situation at all times, for example you are safest at around 
+      5 am it seems, as that is the time where crime reports happen the least.
+      The more we worked with this dataset, 
+      the more we also realized how high quality this data set is, and also the sheer 
+      amount of data they have collected. The data is constantly being updated, and it
+      was relatively rare for us to find crime reports that had missing information outside
+      of the time informtion, where there was more missing rows than usual.
+      This data is however collected by the Seattle Police Department, so it is 
+      extremely possible that there is bias in this dataset towards the SPD which could 
+      cause harm to groups that the SPD negatively affects. 
+      Going 
+      forward, I think three thing we can do to advance this project is also to look at 
+      the areas in Seattle where the most crime reports are made, to add the year feature, 
+      or year range feature to the other datasets, and to add info on which types of crime
+      or crime subgroups are the most popular. Adding the location data would give us 
+      even more insight on the areas and the times to avoid when looking to avoid crime.
+      The other information would help us see the differences in how the pandemic and time
+      has effected the information, and to see trends in certain types of crime over time. 
                   ")))
     )
   )
 )
+
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
@@ -189,12 +220,22 @@ server <- function(input, output) {
   })
   
   output$textSummary3 <- renderText({
-    paste("Text Summary 3" 
+    paste("This graph shows the categories that crime went against, over the months in 
+          a year. The data in the data is all rows in the data that didn't have na 
+          in them. It allow users 
+          to select 4 categories which are society, property, person, and not a crime.
+          This graph shows which categories have more report against them by month.
+          This allows it to show which months crime has occured."
     )
   })
   
   output$textSummary4 <- renderText({
-    paste("Text Summary 4"
+    paste("This graph shows the number of crime reports by hours of day, also letting
+          the user select which category of what the crime was against.
+          This category also has a year range so a user can see how the categories of crime
+          were different over time. This really helps people because it helps 
+          citizens know when they need to be carefull and the category of which type of crime 
+          they need to aware of."
     )
   })
 }
