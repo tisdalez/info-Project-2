@@ -34,7 +34,7 @@ maxRows <- crime1 %>%
 
 ui <- fluidPage(
   mainPanel(
-    titlePanel("Seattle Polihowce Crime Data"),
+    titlePanel("Seattle Police Crime Data"),
     tabsetPanel(
       tabPanel("About the data",
                img(alt="image of crime", 

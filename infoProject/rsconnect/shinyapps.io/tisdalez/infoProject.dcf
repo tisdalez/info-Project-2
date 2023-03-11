@@ -5,9 +5,9 @@ account: tisdalez
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8516686
-bundleId: 6944761
+bundleId: 6944776
 url: https://tisdalez.shinyapps.io/infoProject/
-when: 1678519260.54501
-lastSyncTime: 1678519260.54502
+when: 1678519769.40309
+lastSyncTime: 1678519769.4031
 asMultiple: FALSE
 asStatic: FALSE
